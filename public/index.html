@@ -14,6 +14,7 @@
     }
     .board {
       display: flex;
+      gap: 5px;
       margin-top: 20px;
     }
     .cell {
@@ -21,14 +22,25 @@
       height: 50px;
       border: 1px solid #ccc;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 12px;
+      position: relative;
     }
-    .player {
+    .cell-number {
+      font-size: 10px;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      color: #999;
+    }
+    .player1, .player2 {
       font-weight: bold;
-      color: blue;
+      font-size: 12px;
     }
+    .player1 { color: blue; }
+    .player2 { color: red; }
     #gameInfo {
       margin-top: 20px;
       font-size: 18px;
@@ -92,36 +104,54 @@
 
       const data = await response.json();
 
-      // Verificar se a partida acabou e exibir a mensagem correta
       if (data.message) {
         document.getElementById('gameInfo').innerText = data.message;
         if (data.message.includes("partida acabou")) {
-          document.getElementById('gameInfo').innerText += ` Jogador ${data.player} venceu!`;
-          document.getElementById('rollDiceBtn').disabled = true; // Desativa o botão de rolar dado
+          document.getElementById('gameInfo').innerText = 
+          `Jogador: ${data.player} rolou ${data.dice} e venceu a partida! \n\n Reiniciando em 5 segundos...`;
+          document.getElementById('rollDiceBtn').disabled = true;
+          setTimeout(resetGame, 5000);
         }
+      } else {
+        document.getElementById('gameInfo').innerText = 
+          `Jogador: ${data.player} rolou ${data.dice} e avançou!`;
       }
 
-      updateBoard();
+      updateBoard(data.tabuleiro.player1Position, data.tabuleiro.player2Position, data.tabuleiro.player1Name, data.tabuleiro.player2Name);
     });
 
-    async function updateBoard() {
-      if (!gameId) return;
+    function resetGame() {
+      document.getElementById('gameSection').style.display = 'none';
+      document.getElementById('startSection').style.display = 'block';
+      document.getElementById('rollDiceBtn').disabled = false;
+      document.getElementById('gameInfo').innerText = '';
+      gameId = null;
+    }
 
-      const response = await fetch(`http://localhost:3000/game/${gameId}/play`, { method: 'POST' });
-      const data = await response.json();
-
+    function updateBoard(player1Position = 0, player2Position = 0, player1Name = '', player2Name = '') {
       const board = document.getElementById('board');
       board.innerHTML = '';
 
-      for (let i = 0; i < 16; i++) {
+      for (let i = 0; i <= 15; i++) {
         const cell = document.createElement('div');
         cell.classList.add('cell');
 
-        // Exibir os jogadores nas suas respectivas posições
-        if (i === data.tabuleiro.player1Position) {
-          cell.innerHTML = `<div class="player">${data.tabuleiro.player1Name}</div>`;
-        } else if (i === data.tabuleiro.player2Position) {
-          cell.innerHTML = `<div class="player">${data.tabuleiro.player2Name}</div>`;
+        const cellNumber = document.createElement('div');
+        cellNumber.classList.add('cell-number');
+        cellNumber.innerText = i;
+        cell.appendChild(cellNumber);
+
+        if (i === player1Position) {
+          const player1 = document.createElement('div');
+          player1.classList.add('player1');
+          player1.innerText = player1Name;
+          cell.appendChild(player1);
+        }
+        if (i === player2Position) {
+          const player2 = document.createElement('div');
+          player2.classList.add('player2');
+          player2.innerText = player2Name;
+          cell.appendChild(player2);
         }
 
         board.appendChild(cell);

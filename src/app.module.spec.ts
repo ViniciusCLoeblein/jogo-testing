@@ -1,3 +1,5 @@
+// Testa a conexao com o banco de dados
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from './app.module';
 import { Connection } from 'typeorm';
@@ -17,10 +19,10 @@ describe('AppModule', () => {
   });
 
   it('should connect to the database successfully', async () => {
-    expect(connection.isConnected).toBe(true); 
+    expect(connection.isConnected).toBe(true);
   });
 
   afterAll(async () => {
-    await app.close(); 
+    await app.close();
   });
 });

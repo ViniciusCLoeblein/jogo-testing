@@ -1,6 +1,6 @@
-## Iniciar db 
+## Iniciar db
 
-```bash 
+```bash
 docker-compose up -d
 ```
 
@@ -12,10 +12,11 @@ yarn install
 
 ## Compile and run the project
 
-```bash
+## start
 
-# start
+```bash
 yarn run start:dev
+```
 
 ## Run tests
 
@@ -23,3 +24,8 @@ yarn run start:dev
 yarn test
 ```
 
+## Run tests selenium
+
+```bash
+yarn test:sel
+```

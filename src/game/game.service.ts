@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game } from '../entities/game.entity';
 import { Repository } from 'typeorm';
+import { PlayTurnRes, StartGameRes } from './utils/interface';
 
 @Injectable()
 export class GameService {
@@ -11,12 +12,14 @@ export class GameService {
   ) {}
 
   private rollDice(): number {
-    // Aqui você pode substituir por uma função de sorteio de dados real
     return Math.floor(Math.random() * 6) + 1;
   }
 
   // Iniciar o jogo e armazenar no banco
-  async startGame(player1Name: string, player2Name: string): Promise<object> {
+  async startGame(
+    player1Name: string,
+    player2Name: string,
+  ): Promise<StartGameRes> {
     const game = new Game();
     game.player1Name = player1Name;
     game.player2Name = player2Name;
@@ -29,12 +32,12 @@ export class GameService {
     const g = await this.gameRepository.save(game);
 
     return {
-            message: 'Jogo iniciado!',
-            id: g.id,
-        };
+      message: 'Jogo iniciado!',
+      id: g.id,
+    };
   }
 
-  async playTurn(gameId: number): Promise<object> {
+  async playTurn(gameId: number): Promise<PlayTurnRes> {
     const game = await this.gameRepository.findOne({ where: { id: gameId } });
 
     if (!game) {
@@ -42,7 +45,6 @@ export class GameService {
     }
 
     const currentPlayer = game.currentPlayerIndex === 0 ? 'player1' : 'player2';
-    const opponentPlayer = game.currentPlayerIndex === 0 ? 'player2' : 'player1';
     const diceRoll = this.rollDice();
 
     game[`${currentPlayer}Position`] += diceRoll;
@@ -56,8 +58,9 @@ export class GameService {
       await this.gameRepository.save(game);
       return {
         player: game[currentPlayer + 'Name'],
+        dice: diceRoll,
         message: 'Está partida acabou!',
-    };
+      };
     }
 
     game.currentPlayerIndex = (game.currentPlayerIndex + 1) % 2;
@@ -65,8 +68,9 @@ export class GameService {
     const gameTab = await this.gameRepository.save(game);
 
     return {
-            player: game[currentPlayer + 'Name'],
-            tabuleiro: gameTab
-        };
+      player: game[currentPlayer + 'Name'],
+      dice: diceRoll,
+      tabuleiro: gameTab,
+    };
   }
 }

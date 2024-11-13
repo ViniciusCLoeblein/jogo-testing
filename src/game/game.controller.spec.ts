@@ -68,6 +68,7 @@ describe('GameController', () => {
       jest.spyOn(gameService, 'playTurn').mockResolvedValue({
         player: 'Alice',
         tabuleiro: gameMock,
+        dice: 1,
       });
 
       return request(app.getHttpServer())
@@ -76,6 +77,7 @@ describe('GameController', () => {
         .expect({
           player: 'Alice',
           tabuleiro: gameMock,
+          dice: 1,
         });
     });
   });
