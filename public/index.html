@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo de Tabuleiro</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #startSection {
+      margin-bottom: 20px;
+    }
+    .board {
+      display: flex;
+      margin-top: 20px;
+    }
+    .cell {
+      width: 50px;
+      height: 50px;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .player {
+      font-weight: bold;
+      color: blue;
+    }
+    #gameInfo {
+      margin-top: 20px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Jogo de Tabuleiro</h1>
+
+  <div id="startSection">
+    <label for="player1Name">Nome do Jogador 1:</label>
+    <input type="text" id="player1Name" required><br><br>
+    <label for="player2Name">Nome do Jogador 2:</label>
+    <input type="text" id="player2Name" required><br><br>
+    <button id="startGameBtn">Iniciar Jogo</button>
+  </div>
+
+  <div id="gameSection" style="display: none;">
+    <div class="board" id="board"></div>
+    <div id="gameInfo"></div>
+    <button id="rollDiceBtn">Rolar Dado</button>
+  </div>
+
+  <script>
+    let gameId = null;
+
+    document.getElementById('startGameBtn').addEventListener('click', async () => {
+      const player1Name = document.getElementById('player1Name').value;
+      const player2Name = document.getElementById('player2Name').value;
+
+      if (!player1Name || !player2Name) {
+        alert('Por favor, insira os nomes de ambos os jogadores!');
+        return;
+      }
+
+      const response = await fetch('http://localhost:3000/game/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ player1Name, player2Name })
+      });
+      const data = await response.json();
+
+      if (data.id) {
+        gameId = data.id;
+        document.getElementById('startSection').style.display = 'none';
+        document.getElementById('gameSection').style.display = 'block';
+        updateBoard();
+      }
+    });
+
+    document.getElementById('rollDiceBtn').addEventListener('click', async () => {
+      if (!gameId) {
+        alert('Inicie o jogo primeiro!');
+        return;
+      }
+
+      const response = await fetch(`http://localhost:3000/game/${gameId}/play`, {
+        method: 'POST'
+      });
+
+      const data = await response.json();
+
+      // Verificar se a partida acabou e exibir a mensagem correta
+      if (data.message) {
+        document.getElementById('gameInfo').innerText = data.message;
+        if (data.message.includes("partida acabou")) {
+          document.getElementById('gameInfo').innerText += ` Jogador ${data.player} venceu!`;
+          document.getElementById('rollDiceBtn').disabled = true; // Desativa o botão de rolar dado
+        }
+      }
+
+      updateBoard();
+    });
+
+    async function updateBoard() {
+      if (!gameId) return;
+
+      const response = await fetch(`http://localhost:3000/game/${gameId}/play`, { method: 'POST' });
+      const data = await response.json();
+
+      const board = document.getElementById('board');
+      board.innerHTML = '';
+
+      for (let i = 0; i < 16; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+
+        // Exibir os jogadores nas suas respectivas posições
+        if (i === data.tabuleiro.player1Position) {
+          cell.innerHTML = `<div class="player">${data.tabuleiro.player1Name}</div>`;
+        } else if (i === data.tabuleiro.player2Position) {
+          cell.innerHTML = `<div class="player">${data.tabuleiro.player2Name}</div>`;
+        }
+
+        board.appendChild(cell);
+      }
+    }
+  </script>
+</body>
+</html>
